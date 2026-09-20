@@ -7,7 +7,7 @@
   </svg>
   <div class="container-lg reserve-settings-space">
     <div class="row mb-3">
-      <div class="mx-auto col-md-8 col-12">
+      <div class="mx-auto col-12">
         <div class="search-box">
           <input autocomplete="off" type="text" id="search" #search style="width: 100%" class="form-control"
             placeholder="Type to search..." />
@@ -48,24 +48,24 @@
       </div>
     </div>
 
-    <div class="btn-group mx-auto d-block mb-3" style="width: fit-content">
-      <button id="viewMode-0" (click)="switchMode(viewModeEnum.All)" class="btn btn-primary"
+    <div class="btn-group mx-auto d-flex mb-3 w-100">
+      <button id="viewMode-0" (click)="switchMode(viewModeEnum.All)" class="btn btn-primary flex-fill"
         [ngClass]="{ active: filters?.view_type == viewModeEnum.All }">
         All
       </button>
-      <button id="viewMode-1" (click)="switchMode(viewModeEnum.Categories)" class="btn btn-primary"
+      <button id="viewMode-1" (click)="switchMode(viewModeEnum.Categories)" class="btn btn-primary flex-fill"
         [ngClass]="{ active: filters?.view_type == viewModeEnum.Categories }">
         Categories
       </button>
-      <button id="viewMode-2" (click)="switchMode(viewModeEnum.History)" class="btn btn-primary"
+      <button id="viewMode-2" (click)="switchMode(viewModeEnum.History)" class="btn btn-primary flex-fill"
         [ngClass]="{ active: filters?.view_type == viewModeEnum.History }">
         History
       </button>
-      <button id="viewMode-3" (click)="switchMode(viewModeEnum.Favorites)" class="btn btn-primary"
+      <button id="viewMode-3" (click)="switchMode(viewModeEnum.Favorites)" class="btn btn-primary flex-fill"
         [ngClass]="{ active: filters?.view_type == viewModeEnum.Favorites }">
         Favorites
       </button>
-      <button id="viewMode-4" (click)="switchMode(viewModeEnum.Hidden)" class="btn btn-primary"
+      <button id="viewMode-4" (click)="switchMode(viewModeEnum.Hidden)" class="btn btn-primary flex-fill"
         [ngClass]="{ active: filters?.view_type == viewModeEnum.Hidden }">
         Hidden
       </button>
