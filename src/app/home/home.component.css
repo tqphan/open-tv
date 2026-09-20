@@ -16,6 +16,15 @@
   margin-top: 2rem;
 }
 
+.sticky-toolbar {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  background-color: #202124;
+  padding-top: 0.75rem;
+  margin-top: -0.75rem;
+}
+
 @media screen and (max-width: 767px) {
   .reserve-settings-space {
     margin-top: 5rem;
