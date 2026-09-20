@@ -29,6 +29,16 @@
   </categories>
   <launchable type="desktop-id">dev.fredol.open-tv.desktop</launchable>
   <releases>
+  <release version="1.10.0" date="2026-09-20">
+    <description>
+      <ul>
+        <li>Fixed channel icons not loading (CSP was blocking plain-HTTP image sources)</li>
+        <li>Added mpv/ffmpeg/yt-dlp version display in Settings</li>
+        <li>Fixed search box resetting when switching between All/Categories/History/Favorites</li>
+        <li>App now remembers window position and size</li>
+      </ul>
+    </description>
+  </release>
   <release version="1.9.1" date="2026-01-18">
     <description>
       <ul>

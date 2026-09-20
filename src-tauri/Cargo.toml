@@ -1,6 +1,6 @@
 [package]
 name = "open_tv"
-version = "1.9.1"
+version = "1.10.0"
 description = "Fast And Powerful IPTV App"
 authors = ["Frédéric Lachapelle"]
 license = ""
@@ -46,6 +46,7 @@ if-addrs = "0.13.4"
 tokio-util = "0.7.17"
 indexmap = "2.12.1"
 futures = "0.3.32"
+tauri-plugin-window-state = "2.4.1"
 [target.'cfg(any(target_os = "linux", target_os = "macos"))'.dependencies]
 shell-words = "1.1.0"
 [target.'cfg(target_os = "windows")'.dependencies]
