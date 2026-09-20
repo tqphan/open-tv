@@ -252,5 +252,7 @@ fn get_path(path_str: String) -> String {
 fn get_file_name() -> String {
     let current_time = Local::now();
     let formatted_time = current_time.format("%Y-%m-%d-%H-%M-%S").to_string();
-    format!("{formatted_time}.mp4")
+    // --stream-record dumps the raw network stream (MPEG-TS for livestreams),
+    // not a real MP4 container, so the file must be named accordingly
+    format!("{formatted_time}.ts")
 }
