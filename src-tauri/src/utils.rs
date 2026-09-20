@@ -1,4 +1,4 @@
-use crate::types::{AppState, Channel, ChannelPreserve};
+use crate::types::{AppState, Channel, ChannelPreserve, DependencyVersions};
 use crate::{
     log::log,
     m3u,
@@ -29,11 +29,17 @@ use tokio::sync::Mutex;
 use tokio_util::sync::CancellationToken;
 use which::which;
 
+#[cfg(target_os = "windows")]
+use std::os::windows::process::CommandExt;
+
 const MACOS_POTENTIAL_PATHS: [&str; 3] = [
     "/opt/local/bin",    // MacPorts
     "/opt/homebrew/bin", // Homebrew on AARCH64 Mac
     "/usr/local/bin",    // Homebrew on AMD64 Mac
 ];
+
+#[cfg(target_os = "windows")]
+const CREATE_NO_WINDOW: u32 = 0x08000000;
 
 const DEFAULT_USER_AGENT: &str = "Fred TV";
 
@@ -283,6 +289,34 @@ pub fn find_macos_bin(bin: &str) -> String {
             log(format!("Could not find {} on MacOS host", bin));
             return bin.to_string();
         });
+}
+
+pub fn get_dependency_versions() -> DependencyVersions {
+    DependencyVersions {
+        mpv: get_version(&get_bin("mpv"), "--version", parse_mpv_version),
+        ffmpeg: get_version(&get_bin("ffmpeg"), "-version", parse_ffmpeg_version),
+        yt_dlp: get_version(&get_bin("yt-dlp"), "--version", |s| {
+            Some(s.trim().to_string())
+        }),
+    }
+}
+
+fn get_version(bin: &str, arg: &str, parse: impl Fn(&str) -> Option<String>) -> Option<String> {
+    let mut command = std::process::Command::new(bin);
+    command.arg(arg);
+    #[cfg(target_os = "windows")]
+    command.creation_flags(CREATE_NO_WINDOW);
+    let output = command.output().ok()?;
+    let stdout = String::from_utf8(output.stdout).ok()?;
+    parse(&stdout)
+}
+
+fn parse_mpv_version(stdout: &str) -> Option<String> {
+    stdout.lines().next()?.split_whitespace().nth(1).map(String::from)
+}
+
+fn parse_ffmpeg_version(stdout: &str) -> Option<String> {
+    stdout.lines().next()?.split_whitespace().nth(2).map(String::from)
 }
 
 pub fn serialize_to_file<T: Serialize>(obj: T, path: String) -> Result<()> {

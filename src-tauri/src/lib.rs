@@ -7,8 +7,8 @@ use anyhow::Error;
 use tauri::{AppHandle, Manager, State};
 use tokio::sync::Mutex;
 use types::{
-    AppState, Channel, CustomChannel, CustomChannelExtraData, EPG, EPGNotify, Filters, Group,
-    IdName, NetworkInfo, Settings, Source,
+    AppState, Channel, CustomChannel, CustomChannelExtraData, DependencyVersions, EPG, EPGNotify,
+    Filters, Group, IdName, NetworkInfo, Settings, Source,
 };
 #[cfg(any(target_os = "macos", target_os = "windows"))]
 use {
@@ -62,6 +62,7 @@ pub fn run() {
             play,
             get_settings,
             update_settings,
+            get_dependency_versions,
             search,
             bulk_update,
             get_xtream,
@@ -232,6 +233,11 @@ fn get_settings() -> Result<Settings, String> {
 #[tauri::command(async)]
 fn update_settings(settings: Settings) -> Result<(), String> {
     settings::update_settings(settings).map_err(map_err_frontend)
+}
+
+#[tauri::command(async)]
+fn get_dependency_versions() -> DependencyVersions {
+    utils::get_dependency_versions()
 }
 
 #[tauri::command(async)]

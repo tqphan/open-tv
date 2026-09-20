@@ -95,6 +95,13 @@ pub struct Settings {
     pub enable_gpu: Option<bool>,
 }
 
+#[derive(Clone, PartialEq, Debug, Serialize)]
+pub struct DependencyVersions {
+    pub mpv: Option<String>,
+    pub ffmpeg: Option<String>,
+    pub yt_dlp: Option<String>,
+}
+
 #[derive(Clone, PartialEq, Debug, Deserialize, Serialize)]
 pub struct Filters {
     pub query: Option<String>,

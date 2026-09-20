@@ -1,6 +1,7 @@
 import { Component, ElementRef, HostListener, ViewChild } from "@angular/core";
 import { debounceTime, distinctUntilChanged, fromEvent, map, Subscription } from "rxjs";
 import { Settings } from "../models/settings";
+import { DependencyVersions } from "../models/dependency-versions";
 import { invoke } from "@tauri-apps/api/core";
 import { Router } from "@angular/router";
 import { open } from "@tauri-apps/plugin-dialog";
@@ -34,6 +35,7 @@ export class SettingsComponent {
   sources: Source[] = [];
   expiries: Record<number, number> = {};
   sortTypes = SORT_TYPES;
+  depVersions?: DependencyVersions;
   @ViewChild("mpvParams") mpvParams!: ElementRef;
 
   constructor(
@@ -75,8 +77,15 @@ export class SettingsComponent {
   ngOnInit(): void {
     this.getSettings();
     this.getSources();
+    this.getDependencyVersions();
     if (this.memory.XtreamSourceIds.size > 0)
       this.getExpiries();
+  }
+
+  getDependencyVersions() {
+    invoke("get_dependency_versions").then((x) => {
+      this.depVersions = x as DependencyVersions;
+    });
   }
 
   getSettings() {
