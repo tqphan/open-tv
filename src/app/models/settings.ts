@@ -12,4 +12,7 @@ export class Settings {
   enable_hwdec?: boolean;
   always_ask_save?: boolean;
   enable_gpu?: boolean;
+  filter_livestreams?: boolean;
+  filter_movies?: boolean;
+  filter_series?: boolean;
 }

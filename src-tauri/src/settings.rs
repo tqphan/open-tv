@@ -18,6 +18,9 @@ pub const DEFAULT_SORT: &str = "defaultSort";
 pub const ENABLE_HWDEC: &str = "enableHWDEC";
 pub const ALWAYS_ASK_SAVE: &str = "alwaysAskSave";
 pub const ENABLE_GPU: &str = "enableGPU";
+pub const FILTER_LIVESTREAMS: &str = "filterLivestreams";
+pub const FILTER_MOVIES: &str = "filterMovies";
+pub const FILTER_SERIES: &str = "filterSeries";
 
 pub fn get_settings() -> Result<Settings> {
     let map = sql::get_settings()?;
@@ -39,12 +42,15 @@ pub fn get_settings() -> Result<Settings> {
         enable_hwdec: map.get(ENABLE_HWDEC).and_then(|s| s.parse().ok()),
         always_ask_save: map.get(ALWAYS_ASK_SAVE).and_then(|s| s.parse().ok()),
         enable_gpu: map.get(ENABLE_GPU).and_then(|s| s.parse().ok()),
+        filter_livestreams: map.get(FILTER_LIVESTREAMS).and_then(|s| s.parse().ok()),
+        filter_movies: map.get(FILTER_MOVIES).and_then(|s| s.parse().ok()),
+        filter_series: map.get(FILTER_SERIES).and_then(|s| s.parse().ok()),
     };
     Ok(settings)
 }
 
 pub fn update_settings(settings: Settings) -> Result<()> {
-    let mut map: HashMap<String, Option<String>> = HashMap::with_capacity(13);
+    let mut map: HashMap<String, Option<String>> = HashMap::with_capacity(16);
 
     map.insert(MPV_PARAMS.to_string(), settings.mpv_params);
 
@@ -89,6 +95,18 @@ pub fn update_settings(settings: Settings) -> Result<()> {
     }
     if let Some(gpu) = settings.enable_gpu {
         map.insert(ENABLE_GPU.to_string(), Some(gpu.to_string()));
+    }
+    if let Some(filter_livestreams) = settings.filter_livestreams {
+        map.insert(
+            FILTER_LIVESTREAMS.to_string(),
+            Some(filter_livestreams.to_string()),
+        );
+    }
+    if let Some(filter_movies) = settings.filter_movies {
+        map.insert(FILTER_MOVIES.to_string(), Some(filter_movies.to_string()));
+    }
+    if let Some(filter_series) = settings.filter_series {
+        map.insert(FILTER_SERIES.to_string(), Some(filter_series.to_string()));
     }
     sql::update_settings(map)?;
     Ok(())

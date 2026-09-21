@@ -40,6 +40,7 @@ import { isInputFocused } from "../utils";
 import { Node } from "../models/node";
 import { NodeType } from "../models/nodeType";
 import { Stack } from "../models/stack";
+import { MatMenuTrigger } from "@angular/material/menu";
 
 import { BulkActionType } from '../models/bulkActionType';
 
@@ -48,16 +49,6 @@ import { BulkActionType } from '../models/bulkActionType';
   templateUrl: "./home.component.html",
   styleUrl: "./home.component.css",
   animations: [
-    trigger("fadeInOut", [
-      transition(":enter", [
-        style({ opacity: 0, height: 0, padding: "0", margin: "0" }),
-        animate("250ms", style({ opacity: 1, height: "*", padding: "*", margin: "*" })),
-      ]),
-      transition(":leave", [
-        style({ opacity: 1, height: "*", padding: "*", margin: "*" }),
-        animate("250ms", style({ opacity: 0, height: 0, padding: "0", margin: "0" })),
-      ]),
-    ]),
     trigger("fade", [
       state(
         "visible",
@@ -82,6 +73,8 @@ export class HomeComponent implements AfterViewInit, OnDestroy {
   bulkActionType = BulkActionType;
   readonly mediaTypeEnum = MediaType;
   @ViewChild("search") search!: ElementRef;
+  @ViewChild("filterMenuTrigger") filterMenuTrigger!: MatMenuTrigger;
+  filterMenuPosition = { x: 0, y: 0 };
   shortcuts: ShortcutInput[] = [];
   focus: number = 0;
   focusArea = FocusArea.Tiles;
@@ -89,6 +82,7 @@ export class HomeComponent implements AfterViewInit, OnDestroy {
   currentWindowSize: number = window.innerWidth;
   subscriptions: Subscription[] = [];
   filters?: Filters;
+  appSettings?: Settings;
   chkLiveStream = true;
   chkMovie = true;
   chkSerie = true;
@@ -121,6 +115,7 @@ export class HomeComponent implements AfterViewInit, OnDestroy {
       .then((data) => {
         let settings = data[0] as Settings;
         let sources = data[1] as Source[];
+        this.appSettings = settings;
         if (settings.zoom) getCurrentWebview().setZoom(Math.trunc(settings.zoom! * 100) / 10000);
         this.memory.trayEnabled = settings.enable_tray_icon ?? true;
         this.memory.AlwaysAskSave = settings.always_ask_save ?? false;
@@ -153,10 +148,17 @@ export class HomeComponent implements AfterViewInit, OnDestroy {
             sessionStorage.setItem("epgCheckedOnStart", "true");
             invoke("on_start_check_epg");
           }
+          this.chkLiveStream = settings.filter_livestreams ?? true;
+          this.chkMovie = settings.filter_movies ?? true;
+          this.chkSerie = this.anyXtream() && (settings.filter_series ?? true);
           this.filters = {
             source_ids: Array.from(this.memory.Sources.keys()),
             view_type: settings.default_view ?? ViewMode.All,
-            media_types: [MediaType.livestream, MediaType.movie, MediaType.serie],
+            media_types: [
+              ...(this.chkLiveStream ? [MediaType.livestream] : []),
+              ...(this.chkMovie ? [MediaType.movie] : []),
+              ...(this.chkSerie ? [MediaType.serie] : []),
+            ],
             page: 1,
             use_keywords: false,
             sort: SortType.provider,
@@ -165,7 +167,6 @@ export class HomeComponent implements AfterViewInit, OnDestroy {
             this.memory.Sort.next([settings.default_sort, false]);
             this.filters.sort = settings.default_sort;
           }
-          this.chkSerie = this.anyXtream();
           if (settings.refresh_on_start === true && !sessionStorage.getItem("refreshedOnStart")) {
             sessionStorage.setItem("refreshedOnStart", "true");
             this.refreshOnStart().then((_) => _);
@@ -369,10 +370,7 @@ export class HomeComponent implements AfterViewInit, OnDestroy {
         description: "Enable/Disable livestreams",
         preventDefault: true,
         allowIn: [AllowIn.Input],
-        command: async (_) => {
-          this.chkLiveStream = !this.chkLiveStream;
-          this.updateMediaTypes(MediaType.livestream);
-        },
+        command: async (_) => this.toggleFilter(MediaType.livestream),
       },
       {
         key: "ctrl + w",
@@ -380,10 +378,7 @@ export class HomeComponent implements AfterViewInit, OnDestroy {
         description: "Enable/Disable movies",
         preventDefault: true,
         allowIn: [AllowIn.Input],
-        command: async (_) => {
-          this.chkMovie = !this.chkMovie;
-          this.updateMediaTypes(MediaType.movie);
-        },
+        command: async (_) => this.toggleFilter(MediaType.movie),
       },
       {
         key: "ctrl + e",
@@ -391,10 +386,7 @@ export class HomeComponent implements AfterViewInit, OnDestroy {
         description: "Enable/Disable series",
         preventDefault: true,
         allowIn: [AllowIn.Input],
-        command: async (_) => {
-          this.chkSerie = !this.chkSerie;
-          this.updateMediaTypes(MediaType.serie);
-        },
+        command: async (_) => this.toggleFilter(MediaType.serie),
       },
       {
         key: "left",
@@ -429,15 +421,51 @@ export class HomeComponent implements AfterViewInit, OnDestroy {
     );
   }
 
+  toggleFilter(mediaType: MediaType) {
+    switch (mediaType) {
+      case MediaType.livestream:
+        this.chkLiveStream = !this.chkLiveStream;
+        break;
+      case MediaType.movie:
+        this.chkMovie = !this.chkMovie;
+        break;
+      case MediaType.serie:
+        this.chkSerie = !this.chkSerie;
+        break;
+    }
+    this.updateMediaTypes(mediaType);
+  }
+
   updateMediaTypes(mediaType: MediaType) {
     let index = this.filters!.media_types.indexOf(mediaType);
     if (index == -1) this.filters!.media_types.push(mediaType);
     else this.filters!.media_types.splice(index, 1);
+    this.saveMediaTypeFilters();
     this.load();
   }
 
+  saveMediaTypeFilters() {
+    if (!this.appSettings) return;
+    this.appSettings.filter_livestreams = this.chkLiveStream;
+    this.appSettings.filter_movies = this.chkMovie;
+    this.appSettings.filter_series = this.chkSerie;
+    invoke("update_settings", { settings: this.appSettings });
+  }
+
+  openFilterMenu(event: MouseEvent) {
+    event.preventDefault();
+    this.filterMenuPosition.x = event.clientX;
+    this.filterMenuPosition.y = event.clientY;
+    if (this.memory.currentContextMenu?.menuOpen) this.memory.currentContextMenu.closeMenu();
+    this.memory.currentContextMenu = this.filterMenuTrigger;
+    this.filterMenuTrigger.openMenu();
+  }
+
+  // The inline filter row is gone (replaced by the menu above), so the
+  // remote/keyboard FocusArea.Filters grid stop no longer applies - always
+  // skip over it.
   filtersVisible() {
-    return !this.filters?.series_id;
+    return false;
   }
 
   async switchMode(viewMode: ViewMode) {

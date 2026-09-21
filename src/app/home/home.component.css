@@ -31,18 +31,6 @@
   }
 }
 
-.filterBox {
-  border-radius: 10px;
-  padding: 10px;
-  background-color: #343a40;
-  display: block;
-  width: fit-content;
-}
-
-.form-check {
-  margin-bottom: 0 !important;
-}
-
 .clickable {
   cursor: pointer;
 }
@@ -85,6 +73,28 @@
 
 .reload-icon:hover {
   transform: translateY(-50%) rotate(360deg) scale(1.1);
+}
+
+.filter-icon {
+  height: 1.75rem;
+  width: 1.75rem;
+  position: absolute;
+  right: 10.5rem;
+  top: 50%;
+  transform: translateY(-50%);
+  cursor: pointer;
+  transition: transform 0.5s ease;
+}
+
+.filter-icon:hover {
+  transform: translateY(-50%) scale(1.1);
+}
+
+.check {
+  width: 1em;
+  height: 1em;
+  vertical-align: -0.125em;
+  margin-left: 0.5rem;
 }
 
 .search-box {
