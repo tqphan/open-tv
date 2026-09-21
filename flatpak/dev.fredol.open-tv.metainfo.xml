@@ -28,6 +28,15 @@
   </categories>
   <launchable type="desktop-id">dev.fredol.open-tv.desktop</launchable>
   <releases>
+  <release version="1.10.1" date="2026-09-20">
+    <description>
+      <ul>
+        <li>Fixed recordings not being valid video files (mpv writes raw MPEG-TS, now saved as .ts instead of .mp4)</li>
+        <li>Search bar and view-mode tabs now span the full width and stay sticky while scrolling</li>
+        <li>Media type filters (Livestreams/Movies-Vods/Series) moved into a menu on the search bar, and now persist across restarts</li>
+      </ul>
+    </description>
+  </release>
   <release version="1.10.0" date="2026-09-20">
     <description>
       <ul>
