@@ -5,6 +5,8 @@ export class Settings {
   default_view?: number;
   volume?: number;
   refresh_on_start?: boolean;
+  /** On start, only refresh sources older than this many seconds (0 = always) */
+  refresh_on_start_max_age?: number;
   restream_port?: number;
   enable_tray_icon?: boolean;
   zoom?: number;

@@ -86,6 +86,8 @@ pub struct Settings {
     pub default_view: Option<u8>,
     pub volume: Option<u8>,
     pub refresh_on_start: Option<bool>,
+    /// On start, only refresh sources older than this many seconds (0 = always)
+    pub refresh_on_start_max_age: Option<i64>,
     pub restream_port: Option<u16>,
     pub enable_tray_icon: Option<bool>,
     pub zoom: Option<u16>,

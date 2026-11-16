@@ -169,7 +169,7 @@ export class HomeComponent implements AfterViewInit, OnDestroy {
           }
           if (settings.refresh_on_start === true && !sessionStorage.getItem("refreshedOnStart")) {
             sessionStorage.setItem("refreshedOnStart", "true");
-            this.refreshOnStart().then((_) => _);
+            this.refreshOnStart(sources, settings.refresh_on_start_max_age ?? 0).then((_) => _);
           }
           this.load().then((_) => _);
         }
@@ -180,13 +180,24 @@ export class HomeComponent implements AfterViewInit, OnDestroy {
       });
   }
 
-  async refreshOnStart() {
-    this.toast.info("Refreshing all sources... (refresh on start enabled)");
+  /** Refresh sources whose last refresh is older than maxAge seconds (0 = all sources) */
+  async refreshOnStart(sources: Source[], maxAge: number) {
+    const now = Math.floor(Date.now() / 1000);
+    const stale = sources.filter(
+      (s) =>
+        s.source_type != SourceType.Custom &&
+        (maxAge <= 0 || !s.last_updated || now - s.last_updated >= maxAge),
+    );
+    if (stale.length == 0) return;
+    const label = stale.length == 1 ? "1 source" : `${stale.length} sources`;
+    this.toast.info(`Refreshing ${label}... (refresh on start enabled)`);
     await this.memory.tryIPC(
-      "Successfully refreshed all sources (refresh on start enabled)",
-      "Failed to refresh all sources (refresh on start enabled)",
+      `Successfully refreshed ${label} (refresh on start enabled)`,
+      `Failed to refresh sources (refresh on start enabled)`,
       async () => {
-        await invoke("refresh_all");
+        for (const source of stale) {
+          await invoke("refresh_source", { source });
+        }
       },
     );
   }

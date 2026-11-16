@@ -37,6 +37,24 @@ export class SettingsComponent {
   sortTypes = SORT_TYPES;
   depVersions?: DependencyVersions;
   @ViewChild("mpvParams") mpvParams!: ElementRef;
+  // -1 = off, otherwise max source age in seconds (0 = refresh on every start)
+  readonly refreshOnStartOptions = [
+    { value: -1, label: "Off" },
+    { value: 0, label: "Every start" },
+    { value: 86400, label: "If older than 1 day" },
+    { value: 604800, label: "If older than 1 week" },
+    { value: 2592000, label: "If older than 1 month" },
+  ];
+
+  get refreshOnStartOption(): number {
+    if (!this.settings.refresh_on_start) return -1;
+    return this.settings.refresh_on_start_max_age ?? 0;
+  }
+
+  set refreshOnStartOption(value: number) {
+    this.settings.refresh_on_start = value >= 0;
+    if (value >= 0) this.settings.refresh_on_start_max_age = value;
+  }
 
   constructor(
     private router: Router,
