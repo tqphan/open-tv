@@ -14,7 +14,6 @@ use tokio::{
     io::{AsyncBufReadExt, BufReader},
     process::Command,
 };
-use tokio_util::sync::CancellationToken;
 
 const ARG_SAVE_POSITION_ON_QUIT: &str = "--save-position-on-quit";
 const ARG_CACHE: &str = "--cache=";
@@ -72,7 +71,8 @@ pub async fn play(
         .stdout(Stdio::piped())
         .kill_on_drop(true)
         .spawn()?;
-    let token = CancellationToken::new();
+    // Child of players_stop so close_all_players() can stop every player at once
+    let token = state.lock().await.players_stop.child_token();
     let channel_id = channel.id.context("no channel id")?;
     if let Some(source_id) = source.as_ref().and_then(|s| s.id) {
         _ = crate::utils::insert_play_token(
@@ -137,6 +137,19 @@ pub async fn cancel_play(
     let token = crate::utils::remove_from_play_stop(state, &source_id, &key).await?;
     let token = token.context("no channel found")?;
     token.cancel();
+    Ok(())
+}
+
+/// Close every open channel (mpv players and an active restream). Downloads are left running.
+pub async fn close_all_players(state: State<'_, Mutex<AppState>>) -> Result<()> {
+    let mut guard = state.lock().await;
+    // Swap in a fresh parent token so channels opened afterwards are unaffected
+    let players = std::mem::take(&mut guard.players_stop);
+    players.cancel();
+    guard
+        .restream_stop_signal
+        .store(true, std::sync::atomic::Ordering::Relaxed);
+    log::log("Closed all open channels".to_string());
     Ok(())
 }
 

@@ -191,7 +191,7 @@ export class HomeComponent implements AfterViewInit, OnDestroy {
     if (stale.length == 0) return;
     const label = stale.length == 1 ? "1 source" : `${stale.length} sources`;
     this.toast.info(`Refreshing ${label}... (refresh on start enabled)`);
-    await this.memory.tryIPC(
+    await this.memory.refreshSources(
       `Successfully refreshed ${label} (refresh on start enabled)`,
       `Failed to refresh sources (refresh on start enabled)`,
       async () => {
@@ -200,6 +200,18 @@ export class HomeComponent implements AfterViewInit, OnDestroy {
         }
       },
     );
+  }
+
+  /** Re-download all sources from their providers, then reload the current view */
+  async refreshSources() {
+    if (this.memory.Loading || this.memory.Refreshing) return;
+    this.memory.SeriesRefreshed.clear();
+    const error = await this.memory.refreshSources(
+      "Successfully refreshed all sources",
+      "Failed to refresh sources",
+      () => invoke("refresh_all"),
+    );
+    if (!error) await this.load();
   }
 
   async reload() {

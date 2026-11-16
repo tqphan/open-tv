@@ -1,0 +1,10 @@
+/* Full-screen lock shown while sources refresh. Above modals/menus (~1000-1055),
+   below ngx-toastr (999999) so progress/result toasts stay visible. */
+.refresh-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 2000;
+  background: rgba(0, 0, 0, 0.85);
+  cursor: wait;
+  user-select: none;
+}

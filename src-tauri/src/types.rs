@@ -204,6 +204,8 @@ pub struct AppState {
     pub restream_stop_signal: Arc<AtomicBool>,
 
     pub play_stop: HashMap<i64, IndexMap<String, CancellationToken>>,
+    /// Parent of every running mpv player's token; cancelling it closes all players
+    pub players_stop: CancellationToken,
 }
 
 #[derive(Clone, PartialEq, Debug, Deserialize, Serialize)]

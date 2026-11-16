@@ -41,7 +41,7 @@ export class SourceTileComponent {
 
   async refresh() {
     if (this.source?.source_type == SourceType.Xtream) this.memory.SeriesRefreshed.clear();
-    await this.memory.tryIPC("Successfully updated source", "Failed to refresh source", () =>
+    await this.memory.refreshSources("Successfully updated source", "Failed to refresh source", () =>
       invoke("refresh_source", { source: this.source }),
     );
   }

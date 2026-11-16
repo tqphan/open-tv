@@ -114,6 +114,7 @@ pub fn run() {
             clear_history,
             is_container,
             cancel_play,
+            close_all_channels,
             hide_channel,
             hide_group,
             remove_from_history,
@@ -568,6 +569,13 @@ async fn cancel_play(
     state: State<'_, Mutex<AppState>>,
 ) -> Result<(), String> {
     mpv::cancel_play(source_id, channel_id.to_string(), state)
+        .await
+        .map_err(map_err_frontend)
+}
+
+#[tauri::command]
+async fn close_all_channels(state: State<'_, Mutex<AppState>>) -> Result<(), String> {
+    mpv::close_all_players(state)
         .await
         .map_err(map_err_frontend)
 }

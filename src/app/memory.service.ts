@@ -29,6 +29,8 @@ export class MemoryService {
   public Sources: Map<number, Source> = new Map();
   public currentContextMenu?: MatMenuTrigger;
   public Loading = false;
+  /** True while sources are refreshing; locks the whole UI behind an overlay */
+  public Refreshing = false;
   public Refresh: Subject<boolean> = new Subject();
   public RefreshSources: Subject<boolean> = new Subject();
   public AddingAdditionalSource = false;
@@ -61,6 +63,30 @@ export class MemoryService {
     }
     this.Loading = false;
     return error;
+  }
+
+  /**
+   * Run a source refresh: close all open channels, lock the UI with the
+   * refresh overlay, then run the action. Returns true on error (like tryIPC).
+   */
+  async refreshSources<T>(
+    successMessage: string,
+    errorMessage: string,
+    action: () => Promise<T>,
+  ): Promise<boolean> {
+    if (this.Refreshing) return true;
+    this.Refreshing = true;
+    (document.activeElement as HTMLElement | null)?.blur();
+    try {
+      try {
+        await invoke("close_all_channels");
+      } catch (e) {
+        console.error("Failed to close open channels before refresh", e);
+      }
+      return await this.tryIPC(successMessage, errorMessage, action);
+    } finally {
+      this.Refreshing = false;
+    }
   }
 
   async get_epg_ids() {

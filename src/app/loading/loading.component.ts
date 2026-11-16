@@ -8,14 +8,20 @@ import { Component, Input } from "@angular/core";
 export class LoadingComponent {
   @Input()
   center: boolean = false;
-  count = 0;
+  @Input()
   texts: string[] = ["Loading your channels..."];
+  count = 0;
+  private interval?: ReturnType<typeof setInterval>;
 
   currentText: string = "";
 
   ngOnInit() {
     this.displayRandomText();
-    setInterval(() => this.displayRandomText(), 3500);
+    this.interval = setInterval(() => this.displayRandomText(), 3500);
+  }
+
+  ngOnDestroy() {
+    clearInterval(this.interval);
   }
 
   displayRandomText() {

@@ -60,6 +60,26 @@
   transform: translateY(-50%) scale(1.1);
 }
 
+.refresh-sources-icon {
+  height: 1.75rem;
+  width: 1.75rem;
+  position: absolute;
+  right: 5.5rem;
+  top: 50%;
+  transform: translateY(-50%);
+  cursor: pointer;
+  transition: transform 0.5s ease;
+}
+
+.refresh-sources-icon:hover {
+  transform: translateY(-50%) scale(1.1);
+}
+
+.refresh-sources-icon.disabled {
+  opacity: 0.5;
+  pointer-events: none;
+}
+
 .reload-icon {
   height: 1.75rem;
   width: 1.75rem;

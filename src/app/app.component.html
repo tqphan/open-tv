@@ -1,2 +1,6 @@
 <router-outlet></router-outlet>
 <app-download-manager *ngIf="showDownloadManager()"></app-download-manager>
+<div *ngIf="memory.Refreshing" class="refresh-overlay" role="alertdialog" aria-modal="true" aria-busy="true"
+  aria-label="Refreshing sources">
+  <app-loading [texts]="refreshTexts"></app-loading>
+</div>

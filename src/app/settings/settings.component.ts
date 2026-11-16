@@ -166,7 +166,7 @@ export class SettingsComponent {
 
   async refreshAll() {
     this.memory.SeriesRefreshed.clear();
-    await this.memory.tryIPC("Successfully updated all sources", "Failed to refresh sources", () =>
+    await this.memory.refreshSources("Successfully updated all sources", "Failed to refresh sources", () =>
       invoke("refresh_all"),
     );
   }
