@@ -474,6 +474,9 @@ export class HomeComponent implements AfterViewInit, OnDestroy {
     this.filters!.group_id = undefined;
     this.filters!.view_type = viewMode;
     this.filters!.season = undefined;
+    if (viewMode == ViewMode.Favorites || viewMode == ViewMode.History) {
+      this.clearSearch();
+    }
     this.nodeStack.clear();
     await this.load();
   }
