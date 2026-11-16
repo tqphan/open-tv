@@ -24,10 +24,21 @@ jobs:
       - name: Download mpv
         if: matrix.os == 'windows-latest'
         shell: powershell
+        env:
+          # Authenticated API calls avoid the shared runner IP's anonymous rate limit.
+          # github.token also works when this workflow is called from release.yml.
+          GH_TOKEN: ${{ github.token }}
         run: |
           # Latest stable mpv release (not nightly)
-          $release = Invoke-RestMethod -Uri "https://api.github.com/repos/mpv-player/mpv/releases/latest" -Headers @{ Authorization = "Bearer ${{ secrets.GITHUB_TOKEN }}" }
+          $release = $null
+          for ($i = 1; $i -le 3 -and -not $release; $i++) {
+              try {
+                  $release = Invoke-RestMethod -Uri "https://api.github.com/repos/mpv-player/mpv/releases/latest" -Headers @{ Authorization = "Bearer $env:GH_TOKEN"; "User-Agent" = "open-tv-ci" }
+              } catch { Write-Host "GitHub API error: $_. Retrying..."; Start-Sleep -Seconds 10 }
+          }
+          if (-not $release) { throw "Could not query the latest mpv release" }
           $latestUrl = ($release.assets | Where-Object { $_.name -match "^mpv-v[\d.]+-x86_64-pc-windows-msvc\.zip$" } | Select-Object -First 1).browser_download_url
+          if (-not $latestUrl) { throw "No x86_64 MSVC zip in mpv release $($release.tag_name)" }
           Write-Host "Using mpv $($release.tag_name): $latestUrl"
 
           $retryCount = 3
@@ -49,10 +60,19 @@ jobs:
       - name: Download ffmpeg
         if: matrix.os == 'windows-latest'
         shell: powershell
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
           # Newest stable release branch build (e.g. n9.0), not master
-          $release = Invoke-RestMethod -Uri "https://api.github.com/repos/BtbN/FFmpeg-Builds/releases/latest" -Headers @{ Authorization = "Bearer ${{ secrets.GITHUB_TOKEN }}" }
+          $release = $null
+          for ($i = 1; $i -le 3 -and -not $release; $i++) {
+              try {
+                  $release = Invoke-RestMethod -Uri "https://api.github.com/repos/BtbN/FFmpeg-Builds/releases/latest" -Headers @{ Authorization = "Bearer $env:GH_TOKEN"; "User-Agent" = "open-tv-ci" }
+              } catch { Write-Host "GitHub API error: $_. Retrying..."; Start-Sleep -Seconds 10 }
+          }
+          if (-not $release) { throw "Could not query the latest BtbN FFmpeg release" }
           $asset = $release.assets | Where-Object { $_.name -match '^ffmpeg-n(\d+)\.(\d+)-latest-win64-gpl-\1\.\2\.zip$' } | Sort-Object { [version]($_.name -replace '^ffmpeg-n([\d.]+)-.*','$1') } -Descending | Select-Object -First 1
+          if (-not $asset) { throw "No stable win64-gpl ffmpeg build found in BtbN release" }
           $ffmpegBase = $asset.name -replace '\.zip$',''
           Write-Host "Using ffmpeg $($asset.name)"
 
