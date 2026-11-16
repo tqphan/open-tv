@@ -1,0 +1,83 @@
+name: Release
+
+# Manual only: Actions tab -> "Release" -> "Run workflow".
+# Builds the Windows/Linux packages (via buildAndUpload.yml) and publishes them
+# as a GitHub Release tagged v<version from package.json>.
+on:
+  workflow_dispatch:
+    inputs:
+      draft:
+        description: "Create the release as a draft (publish it manually afterwards)"
+        type: boolean
+        default: false
+      prerelease:
+        description: "Mark as pre-release"
+        type: boolean
+        default: false
+
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+    steps:
+      - name: Only release from main
+        if: github.ref != 'refs/heads/main'
+        run: |
+          echo "::error::Releases must be run from the main branch (got ${{ github.ref }})"
+          exit 1
+
+      - uses: actions/checkout@v4
+
+      - name: Read version and make sure it isn't released yet
+        id: version
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          version=$(node -p "require('./package.json').version")
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          if gh release view "v$version" >/dev/null 2>&1; then
+            echo "::error::Release v$version already exists. Bump the version first."
+            exit 1
+          fi
+          if git ls-remote --exit-code --tags origin "refs/tags/v$version" >/dev/null; then
+            echo "::error::Tag v$version already exists. Bump the version first."
+            exit 1
+          fi
+          echo "Releasing v$version"
+
+  build:
+    needs: check
+    uses: ./.github/workflows/buildAndUpload.yml
+
+  release:
+    needs: [check, build]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: open-tv-*
+          path: dist
+          merge-multiple: true
+
+      - name: Create GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ needs.check.outputs.version }}
+        run: |
+          ls -la dist
+          flags=()
+          if [ "${{ inputs.draft }}" = "true" ]; then flags+=(--draft); fi
+          if [ "${{ inputs.prerelease }}" = "true" ]; then flags+=(--prerelease); fi
+          gh release create "v$VERSION" dist/* \
+            --repo "${{ github.repository }}" \
+            --target "${{ github.sha }}" \
+            --title "Fred TV v$VERSION" \
+            --generate-notes \
+            "${flags[@]}"

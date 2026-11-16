@@ -5,6 +5,8 @@ on:
     branches: ["**"]
   pull_request:
     branches: ["main"]
+  # Reused by release.yml to build the release artifacts
+  workflow_call:
 
 jobs:
   build:
