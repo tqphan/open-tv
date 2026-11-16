@@ -28,6 +28,16 @@
   </categories>
   <launchable type="desktop-id">dev.fredol.open-tv.desktop</launchable>
   <releases>
+  <release version="1.11.0" date="2026-11-15">
+    <description>
+      <ul>
+        <li>"Refresh sources on start" can now refresh only sources older than 1 day, 1 week or 1 month</li>
+        <li>Refreshing sources now closes open channels and locks the UI with a refresh animation until done</li>
+        <li>Added a "Refresh All Sources" button to the search bar</li>
+        <li>Search box now resets when switching to Favorites or History</li>
+      </ul>
+    </description>
+  </release>
   <release version="1.10.1" date="2026-09-20">
     <description>
       <ul>
