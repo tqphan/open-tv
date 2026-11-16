@@ -23,9 +23,10 @@ jobs:
         if: matrix.os == 'windows-latest'
         shell: powershell
         run: |
-          $nightlyPage = "https://nightly.link/mpv-player/mpv/workflows/build/master"
-          $response = Invoke-WebRequest -Uri $nightlyPage -UseBasicParsing
-          $latestUrl = $response.Links.Href | Where-Object { $_ -match "x86_64-pc-windows-msvc\.zip$" } | Select-Object -First 1
+          # Latest stable mpv release (not nightly)
+          $release = Invoke-RestMethod -Uri "https://api.github.com/repos/mpv-player/mpv/releases/latest" -Headers @{ Authorization = "Bearer ${{ secrets.GITHUB_TOKEN }}" }
+          $latestUrl = ($release.assets | Where-Object { $_.name -match "^mpv-v[\d.]+-x86_64-pc-windows-msvc\.zip$" } | Select-Object -First 1).browser_download_url
+          Write-Host "Using mpv $($release.tag_name): $latestUrl"
 
           $retryCount = 3
           $retryDelay = 5
@@ -47,11 +48,17 @@ jobs:
         if: matrix.os == 'windows-latest'
         shell: powershell
         run: |
+          # Newest stable release branch build (e.g. n9.0), not master
+          $release = Invoke-RestMethod -Uri "https://api.github.com/repos/BtbN/FFmpeg-Builds/releases/latest" -Headers @{ Authorization = "Bearer ${{ secrets.GITHUB_TOKEN }}" }
+          $asset = $release.assets | Where-Object { $_.name -match '^ffmpeg-n(\d+)\.(\d+)-latest-win64-gpl-\1\.\2\.zip$' } | Sort-Object { [version]($_.name -replace '^ffmpeg-n([\d.]+)-.*','$1') } -Descending | Select-Object -First 1
+          $ffmpegBase = $asset.name -replace '\.zip$',''
+          Write-Host "Using ffmpeg $($asset.name)"
+
           $retryCount = 3
           $retryDelay = 5
           for ($i = 1; $i -le $retryCount; $i++) {
               try {
-                  Invoke-WebRequest -UserAgent "Wget" -Uri "https://github.com/BtbN/FFmpeg-Builds/releases/latest/download/ffmpeg-master-latest-win64-gpl.zip" -OutFile .\ffmpeg.zip
+                  Invoke-WebRequest -UserAgent "Wget" -Uri $asset.browser_download_url -OutFile .\ffmpeg.zip
                   break
               }
               catch {
@@ -59,7 +66,7 @@ jobs:
                   Start-Sleep -Seconds $retryDelay
               }
           }
-          7z e .\ffmpeg.zip -oC:\open-tv-deps ffmpeg-master-latest-win64-gpl/bin/ffmpeg.exe
+          7z e .\ffmpeg.zip -oC:\open-tv-deps "$ffmpegBase/bin/ffmpeg.exe"
 
       - name: Download yt-dlp
         if: matrix.os == 'windows-latest'
